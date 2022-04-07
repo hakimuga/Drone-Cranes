@@ -1,0 +1,161 @@
+
+package orchestration
+
+
+
+
+
+
+
+    
+    port type port_type_silent ()
+    
+    port type port_type_three_param (float x, float y, float z)
+
+    
+    connector type connector_type_silent (port_type_silent p, port_type_silent q, port_type_silent r)
+      define r' p  q
+        on r p 
+        on r q 
+    
+    end
+
+    
+    connector type connector_type_broadcast (port_type_three_param p, port_type_three_param q, port_type_three_param r)
+        define r' p  q
+        on r p down {r.x=p.x; r.y=p.y; r.z=p.z;}
+        on r q down {r.x=q.x; r.y=q.y; r.z=q.z; }
+    
+    end
+
+    
+    connector type connector_type_synchronize (port_type_three_param p, port_type_three_param q, port_type_three_param r)
+        define (p q r )'
+        
+        on r p q up{ } down {p.x=r.x; p.y=r.y; p.z=x.z;  
+        				   q.x=r.x; q.y=r.y; q.z=x.z;  }
+    
+    end
+
+    
+    atom type Crane (int Id)
+    
+        
+        data float x
+        
+        data float y
+        
+        data float z
+    
+        
+        
+        export port port_type_three_param moveToRequest(x, y, z)
+        
+        export port port_type_silent markersPositionRequest()
+        
+        export port port_type_three_param receiveMarkersPosition(x, y, z)
+        
+        port port_type_silent calculateAlignement()
+        
+        port port_type_silent readjustAlignement()
+        
+        port port_type_silent checkPoistion()
+        
+        place Place1, Place2, Place3, Place4, Place5, Initial
+        initial to Initial
+            
+            on moveToRequest
+                from Place1
+                to Place2
+            
+            on markersPositionRequest
+                from Place2
+                to Place3
+            
+            on receiveMarkersPosition
+                from Place3
+                to Place4
+            
+            on calculateAlignement
+                from Place4
+                to Place5
+            
+            on readjustAlignement
+                from Place5
+                to Initial
+            
+            on checkPoistion
+                from Initial
+                to Place1
+                provided (isCorrectPosition())
+    
+    
+    end
+
+    
+    atom type Drone ()
+    
+        
+        data float x
+        
+        data float y
+        
+        data float z
+    
+        
+        
+        export port port_type_three_param movingRequestReceived(x, y, z)
+        
+        export port port_type_silent markerPositionRequestReceived()
+        
+        export port port_type_three_param senMarkersPosition(x, y, z)
+        
+        port port_type_silent moving()
+        
+        port port_type_silent markersPosition()
+        
+        place Place1, Place2, Place3, Place4, Place5
+        initial to Place1
+            
+            on movingRequestReceived
+                from Place1
+                to Place2
+            
+            on moving
+                from Place2
+                to Place3
+                do {
+                        moveTo(x, y, z);
+                }
+            
+            on markerPositionRequestReceived
+                from Place3
+                to Place4
+            
+            on markersPosition
+                from Place4
+                to Place5
+                do {
+                        calculateMarkersPosition();
+                }
+            
+            on senMarkersPosition
+                from Place5
+                to Place1
+    
+    
+    end
+
+    
+    compound type SmartLiftingSystem ()
+    
+        component Crane crane1 (1)
+        component Crane crane2 (2)
+        component Drone drone ()
+    
+        connector connector_type_silent Connector1 (crane2.markersPositionRequest, crane1.markersPositionRequest, drone.markerPositionRequestReceived)
+        connector connector_type_broadcast Connector2 (crane1.moveToRequest, crane2.moveToRequest, drone.movingRequestReceived)
+        connector connector_type_synchronize Connector3 (crane1.receiveMarkersPosition, crane2.receiveMarkersPosition, drone.senMarkersPosition)
+    
+    end
+end
