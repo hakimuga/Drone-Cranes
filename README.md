@@ -34,3 +34,14 @@ What is the probability that both cranes receive the object markers globally dur
 
 - Unsynchronized version. verdict = 36%
 - Synchronized version. verdict = 100% 
+
+
+===============================================================
+
+****Baouya Abdelhakim****
+
+****Researcher, Verimag Lab****
+
+****Université Grenoble Alpes, France****
+
+****The use of the description is under Licence. Contact me.****
