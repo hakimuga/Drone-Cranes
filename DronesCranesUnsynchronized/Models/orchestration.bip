@@ -1,0 +1,538 @@
+
+
+@cpp(src="ext-cpp/utilities.cpp,ext-cpp/trace_helper.cpp,ext-cpp/proba_helper.cpp",include="utilities.hpp,trace_helper.hpp,proba_helper.hpp")
+
+package orchestration
+
+
+
+
+    
+    extern function printf(string function_param_0)
+    
+    extern function printf(string function_param_0, int function_param_1)
+    
+    extern function printf(string function_param_0, int function_param_1, int function_param_2)
+
+    extern function printf(string function_param_0, int function_param_1, float function_param_2)
+    
+    extern function float randomize()
+
+
+
+    
+    port type port_type_silent ()
+    
+    port type port_type_position (float pos_x, float pos_y, float pos_z, int time)
+    
+    port type port_type_action (int action, int time)
+    
+    port type port_type_markers (float marker1_x, float marker1_y, float marker1_z, float marker2_x, float marker2_y, float marker2_z)
+
+    
+    connector type connector_type_action (port_type_action p, port_type_action q)
+        define p q   
+      on p q down{   p.action=q.action;  p.time=q.time;}
+
+    end
+
+    
+    connector type connector_type_markers_pipe (port_type_markers p, port_type_markers q, port_type_markers r)
+        define p q r 
+            on p q r down{ 
+			r.marker1_x= p.marker1_x;  r.marker1_y= p.marker1_y; r.marker1_z= p.marker1_z; 
+ 
+			r.marker2_x= p.marker2_x;  r.marker2_y= p.marker2_y; r.marker2_z= p.marker2_z; 
+
+			q.marker1_x= p.marker1_x;  q.marker1_y= p.marker1_y; q.marker1_z= p.marker1_z; 
+ 
+			q.marker2_x= p.marker2_x;  q.marker2_y= p.marker2_y; q.marker2_z= p.marker2_z; 
+		 }
+    end
+
+    
+    connector type connector_type_navigation_pipe (port_type_position r, port_type_position p, port_type_position q)
+        define p' q' r 
+	on p r down{ r.pos_x= p.pos_x;  r.pos_y= p.pos_y; r.pos_z= p.pos_z;  r.time= p.time;}
+	on q r down{ r.pos_x= q.pos_x;  r.pos_y= q.pos_y; r.pos_z= q.pos_z;  r.time= q.time;}
+	on p //provided (p.time==-1) 
+    	on q //provided (q.time==-1) 
+	on p q provided (p.time==-1 && q.time==-1) 
+    end
+
+    
+    connector type connector_type_postion_pipe (port_type_silent p, port_type_silent q, port_type_silent r)
+        define p q r
+
+    
+    end
+
+    
+    atom type Drone (int id)
+
+        data int  state
+    
+        
+        data int action
+        
+        data int time
+        
+        data float pos_x
+        
+        data float pos_y
+        
+        data float pos_z
+        
+        data float marker1_x
+        
+        data float marker1_y
+        
+        data float marker1_z
+        
+        data float marker2_x
+        
+        data float marker2_y
+        
+        data float marker2_z
+        
+        data int object_detected
+    
+        
+        
+        export port port_type_action Drone_Prepare_Event(action, time)
+        
+        export port port_type_position Drone_Navigate_Event(pos_x, pos_y, pos_z, time)
+        
+        export port port_type_silent Markers_Position_Request()
+        
+        export port port_type_action Drone_Land_Event(action, time)
+        
+        export port port_type_action Drone_Detect_Object(action, time)
+        
+        export port port_type_markers Drone_Markers_Send(marker1_x, marker1_y, marker1_z, marker2_x, marker2_y, marker2_z)
+        
+        port port_type_silent No_Navigation_Event()
+        
+        place Place1, Preparing, Navigation, Update, No_Event
+        initial to Place1
+            do {
+	    state = 0;
+                action = 0;
+                time = 0;
+                pos_x = 0;
+                pos_y = 0;
+                pos_z = 0;
+                marker1_x = 0;
+                marker1_y = 0;
+                marker1_z = 0;
+                marker2_x = 0;
+                marker2_y = 0;
+                marker2_z = 0;
+                        printf("var int d%d.t %d\n", id, time);
+                        printf("var int d%d.o %d\n", id, object_detected);
+                        printf("var int d%d.m1x %f\n", id, marker1_x);
+                        printf("var int d%d.m1y %f\n", id, marker1_y);
+                        printf("var int d%d.m1z %f\n", id, marker1_z);
+                        printf("var int d%d.m2x %f\n", id, marker2_x);
+                        printf("var int d%d.m2y %f\n", id, marker2_y);
+                        printf("var int d%d.m2z %f\n", id, marker2_z);
+                object_detected = 0;
+
+            }
+            
+            on Drone_Prepare_Event
+                from Place1
+                to Preparing
+                do {
+                        time = (time  +  1);
+                        printf("var int d%d.t %d\n", id, time);
+                        printf("var int d%d.o %d\n", id, object_detected);
+                        printf("var int d%d.m1x %f\n", id, marker1_x);
+                        printf("var int d%d.m1y %f\n", id, marker1_y);
+                        printf("var int d%d.m1z %f\n", id, marker1_z);
+                        printf("var int d%d.m2x %f\n", id, marker2_x);
+                        printf("var int d%d.m2y %f\n", id, marker2_y);
+                        printf("var int d%d.m2z %f\n", id, marker2_z);
+                }
+            
+            on Drone_Navigate_Event
+                from Preparing
+                to Navigation
+                do {
+                        time = (time  +  1);
+                        printf("var int d%d.t %d\n", id, time);
+                        printf("var int d%d.o %d\n", id, object_detected);
+                        printf("var int d%d.m1x %f\n", id, marker1_x);
+                        printf("var int d%d.m1y %f\n", id, marker1_y);
+                        printf("var int d%d.m1z %f\n", id, marker1_z);
+                        printf("var int d%d.m2x %f\n", id, marker2_x);
+                        printf("var int d%d.m2y %f\n", id, marker2_y);
+                        printf("var int d%d.m2z %f\n", id, marker2_z);
+                }
+            
+            on Markers_Position_Request
+                from Navigation
+                to Update
+                do {
+                        time = (time  +  1);
+                        printf("var int d%d.t %d\n", id, time);
+                        printf("var int d%d.o %d\n", id, object_detected);
+                        printf("var int d%d.m1x %f\n", id, marker1_x);
+                        printf("var int d%d.m1y %f\n", id, marker1_y);
+                        printf("var int d%d.m1z %f\n", id, marker1_z);
+                        printf("var int d%d.m2x %f\n", id, marker2_x);
+                        printf("var int d%d.m2y %f\n", id, marker2_y);
+                        printf("var int d%d.m2z %f\n", id, marker2_z);
+                }
+            
+            on No_Navigation_Event
+                from Preparing
+                to No_Event
+                do {
+                        time = (time  +  1);
+                        printf("var int d%d.t %d\n", id, time);
+                        printf("var int d%d.o %d\n", id, object_detected);
+                        printf("var int d%d.m1x %f\n", id, marker1_x);
+                        printf("var int d%d.m1y %f\n", id, marker1_y);
+                        printf("var int d%d.m1z %f\n", id, marker1_z);
+                        printf("var int d%d.m2x %f\n", id, marker2_x);
+                        printf("var int d%d.m2y %f\n", id, marker2_y);
+                        printf("var int d%d.m2z %f\n", id, marker2_z);
+                }
+            
+            on Drone_Land_Event
+                from No_Event
+                to Place1
+                do {
+                        time = (time  +  1);
+                        printf("var int d%d.t %d\n", id, time);
+                        printf("var int d%d.o %d\n", id, object_detected);
+                        printf("var int d%d.m1x %f\n", id, marker1_x);
+                        printf("var int d%d.m1y %f\n", id, marker1_y);
+                        printf("var int d%d.m1z %f\n", id, marker1_z);
+                        printf("var int d%d.m2x %f\n", id, marker2_x);
+                        printf("var int d%d.m2y %f\n", id, marker2_y);
+                        printf("var int d%d.m2z %f\n", id, marker2_z);
+                }
+            
+            on Drone_Detect_Object
+                from Update
+                to Update
+                provided ((object_detected  <  2))
+                do {
+                        
+                        time = (time  +  1);
+
+                        if ((object_detected  ==  0)) then
+                            marker1_x = randomize();
+                            marker1_y = randomize();
+                            marker1_z = randomize();
+                        
+                        fi
+                        if ((object_detected  ==  1)) then
+                            marker2_x = randomize();
+                            marker2_y = randomize();
+                            marker2_z = randomize();
+                        
+                        fi
+		object_detected = (object_detected  +  1);
+                        printf("var int d%d.t %d\n", id, time);
+                        printf("var int d%d.o %d\n", id, object_detected);
+                        printf("var int d%d.m1x %f\n", id, marker1_x);
+                        printf("var int d%d.m1y %f\n", id, marker1_y);
+                        printf("var int d%d.m1z %f\n", id, marker1_z);
+                        printf("var int d%d.m2x %f\n", id, marker2_x);
+                        printf("var int d%d.m2y %f\n", id, marker2_y);
+                        printf("var int d%d.m2z %f\n", id, marker2_z);
+                        
+                }
+            
+            on Drone_Markers_Send
+                from Update
+                to Preparing
+                provided ((object_detected  >=  2))
+                do {
+                        time = (time  +  1);
+                        printf("var int d%d.t %d\n", id, time);
+                        printf("var int d%d.o %d\n", id, object_detected);
+                        printf("var int d%d.m1x %f\n", id, marker1_x);
+                        printf("var int d%d.m1y %f\n", id, marker1_y);
+                        printf("var int d%d.m1z %f\n", id, marker1_z);
+                        printf("var int d%d.m2x %f\n", id, marker2_x);
+                        printf("var int d%d.m2y %f\n", id, marker2_y);
+                        printf("var int d%d.m2z %f\n", id, marker2_z);
+		object_detected  =  0;
+                }
+    
+    
+    end
+
+    
+    atom type DroneEnv (int id)
+    
+        
+        data int time
+        
+        data int action
+    
+        
+        
+        export port port_type_action Drone_Prepare_Event(action, time)
+        
+        export port port_type_action Drone_Land_Event(action, time)
+        
+        export port port_type_action Drone_Detect_Object(action, time)
+        
+        place Init
+        initial to Init
+            do {
+                time = 0;
+                action = 0;
+            }
+            
+            on Drone_Prepare_Event
+                from Init
+                to Init
+                do {
+                        printf("var int d%d.t %d\n", id, time);
+                }
+            
+            on Drone_Land_Event
+                from Init
+                to Init
+                do {
+                        printf("var int d%d.t %d\n", id, time);
+                }
+            
+            on Drone_Detect_Object
+                from Init
+                to Init
+                do {
+                        printf("var int d%d.t %d\n", id, time);
+                }
+    
+    
+    end
+
+    
+    atom type Crane (int id)
+    
+        data int  state
+
+        data int action
+        
+        data float pos_x
+        
+        data float pos_y
+        
+        data float pos_z
+        
+        data int time
+        
+        data float marker1_x
+        
+        data float marker1_y
+        
+        data float marker1_z
+        
+        data float marker2_x
+        
+        data float marker2_y
+        
+        data float marker2_z
+        
+        data int markers_received
+    
+        
+        
+        export port port_type_position Drone_Navigate_Event(pos_x, pos_y, pos_z, time)
+        
+        export port port_type_silent Markers_Position_Request()
+        
+        export port port_type_action Crane_Realignement_Event(action, time)
+        
+        export port port_type_action Crane_Adjust_Event(action, time)
+        
+        export port port_type_markers Drone_Markers_Send(marker1_x, marker1_y, marker1_z, marker2_x, marker2_y, marker2_z)
+        
+        port port_type_silent reset()
+        
+        place Init, Navigation, Update, Alignement, Readjust
+        initial to Init
+            do {
+	    state = 0;
+                action = 0;
+                pos_x = 12;
+                pos_y = 13;
+                pos_z = 16;
+                time = 0;
+                marker1_x = 0;
+                marker1_y = 0;
+                marker1_z = 0;
+                marker2_x = 0;
+                marker2_y = 0;
+                marker2_z = 0;
+                markers_received = 0;
+                printf("var int c%d.t %d\n", id, time);
+                printf("var int c%d.m1x %f\n", id, marker1_x);
+                printf("var int c%d.m1y %f\n", id, marker1_y);
+                printf("var int c%d.m1z %f\n", id, marker1_z);
+                printf("var int c%d.m2x %f\n", id, marker2_x);
+                printf("var int c%d.m2y %f\n", id, marker2_y);
+                printf("var int c%d.m2z %f\n", id, marker2_z);
+	    printf("var int c%d.m %d\n", id, markers_received);
+            }
+            
+            on Drone_Navigate_Event
+                from Init
+                to Navigation
+                do {
+                        time = (time  +  1);
+                        printf("var int c%d.t %d\n", id, time);
+	    printf("var int c%d.m %d\n", id, markers_received);
+                        printf("var int c%d.m1x %f\n", id, marker1_x);
+                        printf("var int c%d.m1y %f\n", id, marker1_y);
+                        printf("var int c%d.m1z %f\n", id, marker1_z);
+                        printf("var int c%d.m2x %f\n", id, marker2_x);
+                        printf("var int c%d.m2y %f\n", id, marker2_y);
+                        printf("var int c%d.m2z %f\n", id, marker2_z);
+                }
+            
+            on Markers_Position_Request
+                from Navigation
+                to Update
+                do {
+                        time = (time  +  1);
+                        printf("var int d%d.t %d\n", id, time);
+	    printf("var int c%d.m %d\n", id, markers_received);
+                        printf("var int c%d.m1x %f\n", id, marker1_x);
+                        printf("var int c%d.m1y %f\n", id, marker1_y);
+                        printf("var int c%d.m1z %f\n", id, marker1_z);
+                        printf("var int c%d.m2x %f\n", id, marker2_x);
+                        printf("var int c%d.m2y %f\n", id, marker2_y);
+                        printf("var int c%d.m2z %f\n", id, marker2_z);
+                }
+            
+            on Crane_Realignement_Event
+                from Update
+                to Alignement
+                provided ((markers_received  >=  1))
+                do {
+                        time = (time  +  1);
+                        printf("var int c%d.t %d\n", id, time);
+	    printf("var int c%d.m %d\n", id, markers_received);
+                        printf("var int c%d.m1x %f\n", id, marker1_x);
+                        printf("var int c%d.m1y %f\n", id, marker1_y);
+                        printf("var int c%d.m1z %f\n", id, marker1_z);
+                        printf("var int c%d.m2x %f\n", id, marker2_x);
+                        printf("var int c%d.m2y %f\n", id, marker2_y);
+                        printf("var int c%d.m2z %f\n", id, marker2_z);
+                }
+            
+            on Crane_Adjust_Event
+                from Alignement
+                to Readjust
+                do {
+                        time = (time  +  1);
+                        printf("var int c%d.t %d\n", id, time);
+                        printf("var int c%d.m1x %f\n", id, marker1_x);
+                        printf("var int c%d.m1y %f\n", id, marker1_y);
+                        printf("var int c%d.m1z %f\n", id, marker1_z);
+                        printf("var int c%d.m2x %f\n", id, marker2_x);
+                        printf("var int c%d.m2y %f\n", id, marker2_y);
+                        printf("var int c%d.m2z %f\n", id, marker2_z);
+	    printf("var int c%d.m %d\n", id, markers_received);
+                }
+            
+            on reset
+                from Readjust
+                to Init
+                do {
+	    printf("var int c%d.m %d\n", id, markers_received);
+                        markers_received = 0;
+                        printf("var int c%d.t %d\n", id, time);
+
+                        printf("var int c%d.m1x %f\n", id, marker1_x);
+                        printf("var int c%d.m1y %f\n", id, marker1_y);
+                        printf("var int c%d.m1z %f\n", id, marker1_z);
+                        printf("var int c%d.m2x %f\n", id, marker2_x);
+                        printf("var int c%d.m2y %f\n", id, marker2_y);
+                        printf("var int c%d.m2z %f\n", id, marker2_z);
+                }
+            
+            on Drone_Markers_Send
+                from Update
+                to Update
+                provided ((markers_received  <  1))
+                do {
+                        time = (time  +  1);
+                        markers_received = (markers_received  +  1);
+                        printf("var int c%d.t %d\n", id, time);
+	    printf("var int c%d.m %d\n", id, markers_received);
+                        printf("var int c%d.m1x %f\n", id, marker1_x);
+                        printf("var int c%d.m1y %f\n", id, marker1_y);
+                        printf("var int c%d.m1z %f\n", id, marker1_z);
+                        printf("var int c%d.m2x %f\n", id, marker2_x);
+                        printf("var int c%d.m2y %f\n", id, marker2_y);
+                        printf("var int c%d.m2z %f\n", id, marker2_z);
+                }
+    
+    
+    end
+
+    
+    atom type CraneEnv (int id)
+    
+        
+        data int action
+        
+        data int time
+    
+        
+        
+        export port port_type_action Crane_Ajust_Event(action, time)
+        
+        export port port_type_action Crane_Realignement_Event(action, time)
+        
+        place Init
+        initial to Init
+            do {
+                action = 0;
+                time = 0;
+            }
+            
+            on Crane_Realignement_Event
+                from Init
+                to Init
+            
+            on Crane_Ajust_Event
+                from Init
+                to Init
+    
+    
+    end
+
+    
+    compound type Compound ()
+    
+        component Drone instanceDrone (1)
+        component DroneEnv instanceDroneEnv (1)
+        component Crane instanceCrane1 (1)
+        component CraneEnv instanceCraneEnv1 (1)
+        component Crane instanceCrane2 (2)
+        component CraneEnv instanceCraneEnv2 (2)
+    
+        connector connector_type_action ConnPrepareEvent (instanceDroneEnv.Drone_Prepare_Event, instanceDrone.Drone_Prepare_Event)
+        connector connector_type_action ConnLandEvent (instanceDroneEnv.Drone_Land_Event, instanceDrone.Drone_Land_Event)
+        connector connector_type_action ConneDetectObject (instanceDroneEnv.Drone_Detect_Object, instanceDrone.Drone_Detect_Object)
+        connector connector_type_action ConnAdjustEvent1 (instanceCrane1.Crane_Adjust_Event, instanceCraneEnv1.Crane_Ajust_Event)
+        connector connector_type_action ConnRealignementEvent1 (instanceCrane1.Crane_Realignement_Event, instanceCraneEnv1.Crane_Realignement_Event)
+        connector connector_type_action ConnRealignementEvent2 (instanceCrane2.Crane_Realignement_Event, instanceCraneEnv2.Crane_Realignement_Event)
+        connector connector_type_action ConnAdjustEvent2 (instanceCrane2.Crane_Adjust_Event, instanceCraneEnv2.Crane_Ajust_Event)
+
+        connector connector_type_markers_pipe ConnMarkersBroadcast (instanceDrone.Drone_Markers_Send, instanceCrane1.Drone_Markers_Send, instanceCrane2.Drone_Markers_Send)
+        connector connector_type_navigation_pipe ConneNavigationBroadcast (instanceDrone.Drone_Navigate_Event, instanceCrane1.Drone_Navigate_Event, instanceCrane2.Drone_Navigate_Event)
+        connector connector_type_postion_pipe ConnPositionRequestBroadcast (instanceDrone.Markers_Position_Request, instanceCrane1.Markers_Position_Request, instanceCrane2.Markers_Position_Request)
+    
+    end
+end
