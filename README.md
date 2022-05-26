@@ -21,7 +21,7 @@ Two automata modeled in BIP. The left is modeling the crane behavior and the rig
 ![Alt text](images/cranes.jpg)
 
 
-3 - **The Crane Behavior:**
+3 - **The Drone Behavior:**
 
 Two automata modeled in BIP. The left is modeling the drone behavior and the right is modeling the drone environement.
 
@@ -30,7 +30,8 @@ Two automata modeled in BIP. The left is modeling the drone behavior and the rig
 
 4 - **Statistical Model Checking:**
 
-What is the probability that both cranes receive the object markers globally during their execution? c1 refers to the first crane, and 2 refers to the second crane. m refers to the marker value 0 or 1. ****G{100} (c1.m==c2.m)****
+What is the probability that both cranes receive the object markers globally during their execution? c1 refers to the first crane, and 2 refers to the second crane. m refers to the marker value 0 or 1. 
+****G{100} (c1.m==c2.m)****
 
 - Unsynchronized version. verdict = 36%
 - Synchronized version. verdict = 100% 
